@@ -82,20 +82,6 @@ function getS3Data(marker, html) {
       });
 }
 
-function buildNavigation(info) {
-  var root = '<a href="?prefix=">' + BUCKET_WEBSITE_URL + '</a> / ';
-  if (info.prefix) {
-    var processedPathSegments = '';
-    var content = $.map(info.prefix.split('/'), function(pathSegment) {
-      processedPathSegments = rocessedPathSegments + encodeURIComponent(pathSegment) + '/';
-      return '<a href="?prefix=' + processedPathSegments + '">' + pathSegment + '</a>';
-    });
-    $('#navigation').html(root + content.join(' / '));
-  } else {
-    $('#navigation').html(root);
-  }
-}
-
 function createS3QueryUrl(marker) {
   var s3_rest_url = BUCKET_URL;
   s3_rest_url += '?delimiter=/';
@@ -183,6 +169,21 @@ function getInfoFromS3Data(xml) {
 //    directories: ..
 //    prefix: ...
 // }
+
+function buildNavigation(info) {
+  var root = '<a href="?prefix=">' + BUCKET_WEBSITE_URL + '</a> / ';
+  if (info.prefix) {
+    var processedPathSegments = '';
+    var content = $.map(info.prefix.split('/'), function(pathSegment) {
+      processedPathSegments = rocessedPathSegments + encodeURIComponent(pathSegment) + '/';
+      return '<a href="?prefix=' + processedPathSegments + '">' + pathSegment + '</a>';
+    });
+    $('#navigation').html(root + content.join(' / '));
+  } else {
+    $('#navigation').html(root);
+  }
+}
+
 function prepareTable(info) {
   var files = info.files.concat(info.directories), prefix = info.prefix;
   var cols = [45, 30, 15];
