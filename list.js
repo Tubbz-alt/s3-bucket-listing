@@ -25,7 +25,9 @@ if (typeof S3B_SORT === 'undefined') {
   var S3B_SORT = 'DEFAULT';
 }
 
-jQuery(function($) { getS3Data(); });
+jQuery(function($) {
+  getS3Data();
+});
 
 // This will sort your file listing by most recently modified.
 // Flip the comparator to '>' if you want oldest files first.
@@ -45,41 +47,56 @@ function sortFunction(a, b) {
       return a.Size > b.Size ? 1 : -1;
   }
 }
-function getS3Data(marker, html) {
+function getS3Data(marker, table_rows) {
+  // If file listing is untruncated (= fewer items than delimiter) than 
+  // this function will only run once. If truncated, this function will run 
+  // recursively, passing forward marker and already created table_rows.
+  // By default, recursive running will only be triggered on > 1000 files
+  // in one directory.
+
   var s3_rest_url = createS3QueryUrl(marker);
   // set loading notice
-  $('#listing')
-      .html('<p>Loading...</p>');
+  $('#listing').html('<p>loading...</p>');
+  
   $.get(s3_rest_url)
-      .done(function(data) {
-        // clear loading notice
-        $('#listing').html('');
-        var xml = $(data);
-        var info = getInfoFromS3Data(xml);
+    .done(function(data) {
+      // clear loading notice
+      $('#listing').html('');
+      var xml = $(data);
+      var info = getInfoFromS3Data(xml);
 
-        // Slight modification by FuzzBall03
-        // This will sort your file listing based on var S3B_SORT
-        // See url for example:
-        // http://esp-link.s3-website-us-east-1.amazonaws.com/
-        if (S3B_SORT !== 'DEFAULT') {
-          var sortedFiles = info.files;
-          sortedFiles.sort(sortFunction);
-          info.files = sortedFiles;
-        }
+      if (S3B_SORT != 'DEFAULT') {
+        var sortedFiles = info.files;
+        sortedFiles.sort(sortFunction);
+        info.files = sortedFiles;
+      }
 
-        buildNavigation(info);
+      // build navigation
+      buildNavigation(info);
 
-        html = typeof html !== 'undefined' ? html + buildTable(info) : buildTable(info);
-        if (info.nextMarker !== "null") {
-          getS3Data(info.nextMarker, html);
-        } else {
-          document.getElementById('listing').innerHTML = html;
-        }
-      })
-      .fail(function(error) {
-        console.error(error);
-        $('#listing').html('<p class="alert alert-danger">Error: ' + error + '</p>');
-      });
+      // build table_rows
+      if (typeof table_rows === 'undefined') { // 1st trunc
+        table_rows = buildRows(info);
+      } else {
+        table_rows = table_rows + buildRows(info);
+      }
+
+      // get more truncs
+      if (info.nextMarker !== 'null') {
+        getS3Data(info.nextMarker, table_rows);
+      } else { // no more truncs
+        var html = '<table class="table table-striped table-condensed"><tbody>';
+        html += '<tr><th>Name</th><th>Last modified</th><th>Size</th></tr>';
+        html += table_rows;
+        html += '</tbody></table>';
+
+        $('#listing').html(html);
+      }
+    })  
+    .fail(function(error) {
+      console.error(error);
+      $('#listing').html('<p class="alert alert-danger">Error: ' + error + '</p>');
+    });
 }
 
 function createS3QueryUrl(marker) {
@@ -184,11 +201,10 @@ function buildNavigation(info) {
   }
 }
 
-function buildTable(info) {
+function buildRows(info) {
   var files = info.files.concat(info.directories), prefix = info.prefix;
-  var html = [];
-  html.push('<table class="table table-striped table-condensed"><tbody>\n');
-  html.push('<tr><th>Name</th><th>Last modified</th><th>Size</th></tr>\n');
+  var html_list = [];
+
 
   // add parent directory item (../) at the start of the dir listing, unless we are already at root dir
   if (prefix && prefix !== S3B_ROOT_DIR) {
@@ -202,7 +218,7 @@ function buildTable(info) {
               href: S3BL_IGNORE_PATH ? '?prefix=' + up : '../'
             },
         row = buildRow(item);
-    html.push(row + '\n');
+    html_list.push(row + '\n');
   }
 
   // list items
@@ -219,11 +235,9 @@ function buildTable(info) {
       item.href = item.href.replace(/%2F/g, '/');
     }
     var row = buildRow(item);
-    html.push(row + '\n');
+    html_list.push(row + '\n');
   });
 
-  html.push('</tbody></<table>');  // end of table
-  return html.join('');
 }
 
 function buildRow(item) {
@@ -234,6 +248,7 @@ function buildRow(item) {
   row += '<td>' + item.Size + '</td>';
   row += '</tr>';
   return row;
+  return html_list.join('');
 }
 
 function bytesToHumanReadable(sizeInBytes) {
