@@ -149,25 +149,21 @@ function createS3QueryUrl(marker) {
 function getInfoFromS3Data(xml) {
   var files = $.map(xml.find('Contents'), function(item) {
     item = $(item);
-    // clang-format off
     return {
       Key: item.find('Key').text(),
           LastModified: item.find('LastModified').text(),
           Size: bytesToHumanReadable(item.find('Size').text()),
           Type: 'file'
     };
-    // clang-format on
   });
   var directories = $.map(xml.find('CommonPrefixes'), function(item) {
     item = $(item);
-    // clang-format off
     return {
       Key: item.find('Prefix').text(),
         LastModified: '',
         Size: '0',
         Type: 'directory'
     };
-    // clang-format on
   });
   var nextMarker = null;
   if ($(xml.find('IsTruncated')[0]).text() === 'true') {
@@ -175,22 +171,13 @@ function getInfoFromS3Data(xml) {
   } else {
     nextMarker = null;
   }
-  // clang-format off
   return {
     files: files,
     directories: directories,
     prefix: $(xml.find('Prefix')[0]).text(),
     nextMarker: encodeURIComponent(nextMarker)
   };
-  // clang-format on
 }
-
-// info is object like:
-// {
-//    files: ..
-//    directories: ..
-//    prefix: ...
-// }
 
 function buildNavigation(info) {
   var html_list = [];
@@ -221,7 +208,8 @@ function buildNavigation(info) {
 }
 
 function buildRows(info) {
-  var files = info.files.concat(info.directories), prefix = info.prefix;
+  var files = info.files.concat(info.directories);
+  var prefix = info.prefix;
   var html_list = [];
 
   function buildRow(item) {
@@ -230,23 +218,23 @@ function buildRows(info) {
     row += '<td><a href="' + item.href + '">' + item.keyText + '</a></td>';
     row += '<td>' + item.LastModified + '</td>';
     row += '<td>' + item.Size + '</td>';
-    row += '</tr>';
+    row += '</tr>\n';
     return row;
   }
 
   // add parent directory item (../) at the start of the dir listing, unless we are already at root dir
   if (prefix && prefix !== S3B_ROOT_DIR) {
     var up = prefix.replace(/\/$/, '').split('/').slice(0, -1).concat('').join('/'),  // one directory up
-        item =
-            {
-              Key: up,
-              LastModified: '',
-              Size: '',
-              keyText: '⏎',
-              href: S3BL_IGNORE_PATH ? '?prefix=' + up : '../'
-            },
-        row = buildRow(item);
-    html_list.push(row + '\n');
+      item =
+          {
+            Key: up,
+            LastModified: '',
+            Size: '',
+            keyText: '⏎',
+            href: S3BL_IGNORE_PATH ? '?prefix=' + up : '../'
+          },
+      row = buildRow(item);
+    html_list.push(row);
   }
 
   // list items
@@ -263,7 +251,7 @@ function buildRows(info) {
       item.href = item.href.replace(/%2F/g, '/');
     }
     var row = buildRow(item);
-    html_list.push(row + '\n');
+    html_list.push(row);
   });
 
   return html_list.join('');
