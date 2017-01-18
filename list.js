@@ -70,13 +70,6 @@ function getS3Data(marker, table_rows) {
         sortedFiles.sort(sortFunction);
         info.files = sortedFiles;
       }
-
-      // build navigation
-      var nav_html = '<ol class="breadcrumb">You\'re here: \n';
-      nav_html += buildNavigation(info);
-      nav_html += '</ol>\n';
-
-      $('#navigation').html(nav_html);
       
       // build table_rows
       if (typeof table_rows === 'undefined') { // 1st trunc
@@ -89,6 +82,14 @@ function getS3Data(marker, table_rows) {
       if (info.nextMarker !== 'null') {
         getS3Data(info.nextMarker, table_rows);
       } else { // no more truncs
+        // render navigation
+        var nav_html = '<ol class="breadcrumb">You\'re here: \n';
+        nav_html += buildNavigation(info);
+        nav_html += '</ol>\n';
+
+        $('#navigation').html(nav_html);
+
+        // render table
         var table_html = '<table class="table table-striped table-condensed"><tbody>\n';
         table_html += '<tr><th>Name</th><th>Last modified</th><th>Size</th></tr>\n';
         table_html += table_rows;
