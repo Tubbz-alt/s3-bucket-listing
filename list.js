@@ -69,11 +69,11 @@ function getS3Data(marker, html) {
 
         buildNavigation(info);
 
-        html = typeof html !== 'undefined' ? html + prepareTable(info) : prepareTable(info);
+        html = typeof html !== 'undefined' ? html + buildTable(info) : buildTable(info);
         if (info.nextMarker !== "null") {
           getS3Data(info.nextMarker, html);
         } else {
-          document.getElementById('listing').innerHTML = '<pre>' + html + '</pre>';
+          document.getElementById('listing').innerHTML = html;
         }
       })
       .fail(function(error) {
@@ -184,14 +184,13 @@ function buildNavigation(info) {
   }
 }
 
-function prepareTable(info) {
+function buildTable(info) {
   var files = info.files.concat(info.directories), prefix = info.prefix;
-  var cols = [45, 30, 15];
-  var content = [];
-  content.push(padRight('Last Modified', cols[1]) + '  ' + padRight('Size', cols[2]) + 'Key \n');
-  content.push(new Array(cols[0] + cols[1] + cols[2] + 4).join('-') + '\n');
+  var html = [];
+  html.push('<table class="table table-striped table-condensed"><tbody>\n');
+  html.push('<tr><th>Name</th><th>Last modified</th><th>Size</th></tr>\n');
 
-  // add ../ at the start of the dir listing, unless we are already at root dir
+  // add parent directory item (../) at the start of the dir listing, unless we are already at root dir
   if (prefix && prefix !== S3B_ROOT_DIR) {
     var up = prefix.replace(/\/$/, '').split('/').slice(0, -1).concat('').join('/'),  // one directory up
         item =
@@ -202,47 +201,39 @@ function prepareTable(info) {
               keyText: '../',
               href: S3BL_IGNORE_PATH ? '?prefix=' + up : '../'
             },
-        row = renderRow(item, cols);
-    content.push(row + '\n');
+        row = buildRow(item);
+    html.push(row + '\n');
   }
 
+  // list items
   jQuery.each(files, function(idx, item) {
-    // strip off the prefix
     item.keyText = item.Key.substring(prefix.length);
-    if (item.Type === 'directory') {
+    if (item.Type === 'directory') { // directory
       if (S3BL_IGNORE_PATH) {
         item.href = location.protocol + '//' + location.hostname + location.pathname + '?prefix=' + item.Key;
       } else {
         item.href = item.keyText;
       }
-    } else {
+    } else { // file
       item.href = BUCKET_WEBSITE_URL + '/' + encodeURIComponent(item.Key);
       item.href = item.href.replace(/%2F/g, '/');
     }
-    var row = renderRow(item, cols);
-    content.push(row + '\n');
+    var row = buildRow(item);
+    html.push(row + '\n');
   });
 
-  return content.join('');
+  html.push('</tbody></<table>');  // end of table
+  return html.join('');
 }
 
-function renderRow(item, cols) {
+function buildRow(item) {
   var row = '';
-  row += padRight(item.LastModified, cols[1]) + '  ';
-  row += padRight(item.Size, cols[2]);
-  row += '<a href="' + item.href + '">' + item.keyText + '</a>';
+  row += '<tr>';
+  row += '<td><a href="' + item.href + '">' + item.keyText + '</a></td>';
+  row += '<td>' + item.LastModified + '</td>';
+  row += '<td>' + item.Size + '</td>';
+  row += '</tr>';
   return row;
-}
-
-function padRight(padString, length) {
-  var str = padString.slice(0, length - 3);
-  if (padString.length > str.length) {
-    str += '...';
-  }
-  while (str.length < length) {
-    str = str + ' ';
-  }
-  return str;
 }
 
 function bytesToHumanReadable(sizeInBytes) {
