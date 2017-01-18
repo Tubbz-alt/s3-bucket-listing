@@ -205,6 +205,15 @@ function buildRows(info) {
   var files = info.files.concat(info.directories), prefix = info.prefix;
   var html_list = [];
 
+  function buildRow(item) {
+    var row = '';
+    row += '<tr>';
+    row += '<td><a href="' + item.href + '">' + item.keyText + '</a></td>';
+    row += '<td>' + item.LastModified + '</td>';
+    row += '<td>' + item.Size + '</td>';
+    row += '</tr>';
+    return row;
+  }
 
   // add parent directory item (../) at the start of the dir listing, unless we are already at root dir
   if (prefix && prefix !== S3B_ROOT_DIR) {
@@ -238,16 +247,6 @@ function buildRows(info) {
     html_list.push(row + '\n');
   });
 
-}
-
-function buildRow(item) {
-  var row = '';
-  row += '<tr>';
-  row += '<td><a href="' + item.href + '">' + item.keyText + '</a></td>';
-  row += '<td>' + item.LastModified + '</td>';
-  row += '<td>' + item.Size + '</td>';
-  row += '</tr>';
-  return row;
   return html_list.join('');
 }
 
