@@ -1,28 +1,27 @@
-if (typeof S3BL_IGNORE_PATH == 'undefined' || S3BL_IGNORE_PATH != true) {
+if (typeof S3BL_IGNORE_PATH === 'undefined' || S3BL_IGNORE_PATH !== true) {
   var S3BL_IGNORE_PATH = false;
 }
 
-if (typeof BUCKET_URL == 'undefined') {
+if (typeof BUCKET_URL === 'undefined') {
   var BUCKET_URL = location.protocol + '//' + location.hostname;
 }
 
-if (typeof BUCKET_NAME != 'undefined') {
-  // if bucket_url does not start with bucket_name,
-  // assume path-style url
+if (typeof BUCKET_NAME !== 'undefined') {
+  // if bucket_url does not start with bucket_name, assume path-style url
   if (!~BUCKET_URL.indexOf(location.protocol + '//' + BUCKET_NAME)) {
     BUCKET_URL += '/' + BUCKET_NAME;
   }
 }
 
-if (typeof BUCKET_WEBSITE_URL == 'undefined') {
+if (typeof BUCKET_WEBSITE_URL === 'undefined') {
   var BUCKET_WEBSITE_URL = BUCKET_URL;
 }
 
-if (typeof S3B_ROOT_DIR == 'undefined') {
+if (typeof S3B_ROOT_DIR === 'undefined') {
   var S3B_ROOT_DIR = '';
 }
 
-if (typeof S3B_SORT == 'undefined') {
+if (typeof S3B_SORT === 'undefined') {
   var S3B_SORT = 'DEFAULT';
 }
 
@@ -62,7 +61,7 @@ function getS3Data(marker, html) {
         // This will sort your file listing based on var S3B_SORT
         // See url for example:
         // http://esp-link.s3-website-us-east-1.amazonaws.com/
-        if (S3B_SORT != 'DEFAULT') {
+        if (S3B_SORT !== 'DEFAULT') {
           var sortedFiles = info.files;
           sortedFiles.sort(sortFunction);
           info.files = sortedFiles;
@@ -70,13 +69,11 @@ function getS3Data(marker, html) {
 
         buildNavigation(info);
 
-        html = typeof html !== 'undefined' ? html + prepareTable(info) :
-                                             prepareTable(info);
-        if (info.nextMarker != "null") {
+        html = typeof html !== 'undefined' ? html + prepareTable(info) : prepareTable(info);
+        if (info.nextMarker !== "null") {
           getS3Data(info.nextMarker, html);
         } else {
-          document.getElementById('listing').innerHTML =
-              '<pre>' + html + '</pre>';
+          document.getElementById('listing').innerHTML = '<pre>' + html + '</pre>';
         }
       })
       .fail(function(error) {
@@ -90,10 +87,8 @@ function buildNavigation(info) {
   if (info.prefix) {
     var processedPathSegments = '';
     var content = $.map(info.prefix.split('/'), function(pathSegment) {
-      processedPathSegments =
-          processedPathSegments + encodeURIComponent(pathSegment) + '/';
-      return '<a href="?prefix=' + processedPathSegments + '">' + pathSegment +
-             '</a>';
+      processedPathSegments = rocessedPathSegments + encodeURIComponent(pathSegment) + '/';
+      return '<a href="?prefix=' + processedPathSegments + '">' + pathSegment + '</a>';
     });
     $('#navigation').html(root + content.join(' / '));
   } else {
@@ -121,20 +116,20 @@ function createS3QueryUrl(marker) {
 
   var rx = '.*[?&]prefix=' + S3B_ROOT_DIR + '([^&]+)(&.*)?$';
   var prefix = '';
-  if (S3BL_IGNORE_PATH == false) {
-    var prefix = location.pathname.replace(/^\//, S3B_ROOT_DIR);
+  if (S3BL_IGNORE_PATH === false) {
+    prefix = location.pathname.replace(/^\//, S3B_ROOT_DIR);
   }
   var match = location.search.match(rx);
   if (match) {
     prefix = S3B_ROOT_DIR + match[1];
   } else {
     if (S3BL_IGNORE_PATH) {
-      var prefix = S3B_ROOT_DIR;
+      prefix = S3B_ROOT_DIR;
     }
   }
   if (prefix) {
     // make sure we end in /
-    var prefix = prefix.replace(/\/$/, '') + '/';
+    prefix = prefix.replace(/\/$/, '') + '/';
     s3_rest_url += '&prefix=' + prefix;
   }
   if (marker) {
@@ -152,7 +147,7 @@ function getInfoFromS3Data(xml) {
           LastModified: item.find('LastModified').text(),
           Size: bytesToHumanReadable(item.find('Size').text()),
           Type: 'file'
-    }
+    };
     // clang-format on
   });
   var directories = $.map(xml.find('CommonPrefixes'), function(item) {
@@ -163,13 +158,14 @@ function getInfoFromS3Data(xml) {
         LastModified: '',
         Size: '0',
         Type: 'directory'
-    }
+    };
     // clang-format on
   });
-  if ($(xml.find('IsTruncated')[0]).text() == 'true') {
-    var nextMarker = $(xml.find('NextMarker')[0]).text();
+  var nextMarker = null;
+  if ($(xml.find('IsTruncated')[0]).text() === 'true') {
+    nextMarker = $(xml.find('NextMarker')[0]).text();
   } else {
-    var nextMarker = null;
+    nextMarker = null;
   }
   // clang-format off
   return {
@@ -177,7 +173,7 @@ function getInfoFromS3Data(xml) {
     directories: directories,
     prefix: $(xml.find('Prefix')[0]).text(),
     nextMarker: encodeURIComponent(nextMarker)
-  }
+  };
   // clang-format on
 }
 
@@ -191,14 +187,12 @@ function prepareTable(info) {
   var files = info.files.concat(info.directories), prefix = info.prefix;
   var cols = [45, 30, 15];
   var content = [];
-  content.push(padRight('Last Modified', cols[1]) + '  ' +
-               padRight('Size', cols[2]) + 'Key \n');
+  content.push(padRight('Last Modified', cols[1]) + '  ' + padRight('Size', cols[2]) + 'Key \n');
   content.push(new Array(cols[0] + cols[1] + cols[2] + 4).join('-') + '\n');
 
   // add ../ at the start of the dir listing, unless we are already at root dir
   if (prefix && prefix !== S3B_ROOT_DIR) {
-    var up = prefix.replace(/\/$/, '').split('/').slice(0, -1).concat('').join(
-            '/'),  // one directory up
+    var up = prefix.replace(/\/$/, '').split('/').slice(0, -1).concat('').join('/'),  // one directory up
         item =
             {
               Key: up,
@@ -216,8 +210,7 @@ function prepareTable(info) {
     item.keyText = item.Key.substring(prefix.length);
     if (item.Type === 'directory') {
       if (S3BL_IGNORE_PATH) {
-        item.href = location.protocol + '//' + location.hostname +
-                    location.pathname + '?prefix=' + item.Key;
+        item.href = location.protocol + '//' + location.hostname + location.pathname + '?prefix=' + item.Key;
       } else {
         item.href = item.keyText;
       }
