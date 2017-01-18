@@ -247,7 +247,7 @@ function buildRows(info, first_iteration) {
     item.keyText = item.Key.substring(prefix.length);
     if (item.Type === 'directory') { // directory
       if (S3BL_IGNORE_PATH) {
-        item.href = location.protocol + '//' + location.hostname + location.pathname + '?prefix=' + item.Key;
+        item.href = '?prefix=' + item.Key;
       } else {
         item.href = item.keyText;
       }
