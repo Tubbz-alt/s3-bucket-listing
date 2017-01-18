@@ -72,8 +72,12 @@ function getS3Data(marker, table_rows) {
       }
 
       // build navigation
-      buildNavigation(info);
+      var nav_html = '<ol class="breadcrumb">You\'re here: \n';
+      nav_html += buildNavigation(info);
+      nav_html += '</ol>\n';
 
+      $('#navigation').html(nav_html);
+      
       // build table_rows
       if (typeof table_rows === 'undefined') { // 1st trunc
         table_rows = buildRows(info);
@@ -85,12 +89,12 @@ function getS3Data(marker, table_rows) {
       if (info.nextMarker !== 'null') {
         getS3Data(info.nextMarker, table_rows);
       } else { // no more truncs
-        var html = '<table class="table table-striped table-condensed"><tbody>';
-        html += '<tr><th>Name</th><th>Last modified</th><th>Size</th></tr>';
-        html += table_rows;
-        html += '</tbody></table>';
+        var table_html = '<table class="table table-striped table-condensed"><tbody>\n';
+        table_html += '<tr><th>Name</th><th>Last modified</th><th>Size</th></tr>\n';
+        table_html += table_rows;
+        table_html += '</tbody></table>\n';
 
-        $('#listing').html(html);
+        $('#listing').html(table_html);
       }
     })  
     .fail(function(error) {
@@ -188,17 +192,31 @@ function getInfoFromS3Data(xml) {
 // }
 
 function buildNavigation(info) {
-  var root = '<a href="?prefix=">' + BUCKET_WEBSITE_URL + '</a> / ';
-  if (info.prefix) {
-    var processedPathSegments = '';
-    var content = $.map(info.prefix.split('/'), function(pathSegment) {
-      processedPathSegments = processedPathSegments + encodeURIComponent(pathSegment) + '/';
-      return '<a href="?prefix=' + processedPathSegments + '">' + pathSegment + '</a>';
-    });
-    $('#navigation').html(root + content.join(' / '));
-  } else {
-    $('#navigation').html(root);
-  }
+  var html_list = [];
+  var directories = info.prefix.split('/');
+  var directoryName = '';
+  var directoryPath = '';
+
+  directories.unshift(''); // add root dir as first directory
+  directories.pop(); // remove empty element after last slash
+
+  jQuery.each(directories, function(index, directory) {
+    if (index === 0) { // root directory
+      directoryName = BUCKET_WEBSITE_URL;
+      directoryPath = directoryPath;
+    } else {
+      directoryName = directory;
+      directoryPath = directoryPath + encodeURIComponent(directory) + '/';
+    }
+
+    if (index === directories.length - 1) { // last directory
+      html_list.push('<li class="active">' + directoryName + '</li>\n'); // don't display as link
+    } else {
+      html_list.push('<li><a href="?prefix=' + directoryPath + '">' + directoryName + '</a></li>\n');
+    }
+  });
+
+  return html_list.join('');
 }
 
 function buildRows(info) {
