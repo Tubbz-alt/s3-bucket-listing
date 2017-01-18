@@ -73,9 +73,9 @@ function getS3Data(marker, table_rows) {
       
       // build table_rows
       if (typeof table_rows === 'undefined') { // 1st trunc
-        table_rows = buildRows(info);
+        table_rows = buildRows(info, true);
       } else {
-        table_rows = table_rows + buildRows(info);
+        table_rows = table_rows + buildRows(info, false);
       }
 
       // get more truncs
@@ -207,7 +207,7 @@ function buildNavigation(info) {
   return html_list.join('');
 }
 
-function buildRows(info) {
+function buildRows(info, first_iteration) {
   var files = info.files.concat(info.directories);
   var prefix = info.prefix;
   var html_list = [];
@@ -222,8 +222,9 @@ function buildRows(info) {
     return row;
   }
 
-  // add parent directory item (../) at the start of the dir listing, unless we are already at root dir
-  if (prefix && prefix !== S3B_ROOT_DIR) {
+  // add parent directory item (../) at the start of the dir listing (first_iteration = true), 
+  // unless we are already at root dir
+  if (first_iteration && prefix && prefix !== S3B_ROOT_DIR) {
     var up = prefix.replace(/\/$/, '').split('/').slice(0, -1).concat('').join('/'),  // one directory up
       item =
           {
