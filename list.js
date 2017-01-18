@@ -190,7 +190,7 @@ function buildNavigation(info) {
 
   jQuery.each(directories, function(index, directory) {
     if (index === 0) { // root directory
-      directoryName = BUCKET_WEBSITE_URL;
+      directoryName = '<span class="glyphicon glyphicon-home" aria-hidden="true"></span>';
       directoryPath = directoryPath;
     } else {
       directoryName = directory;
