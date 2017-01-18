@@ -82,6 +82,10 @@ function getS3Data(marker, table_rows) {
       if (info.nextMarker !== 'null') {
         getS3Data(info.nextMarker, table_rows);
       } else { // no more truncs
+
+        // render bucket link
+        $('#bucket_link').html('<a href="' + BUCKET_WEBSITE_URL + '">' + BUCKET_WEBSITE_URL + '</a>');
+
         // render navigation
         var nav_html = '<ol class="breadcrumb">You\'re here: \n';
         nav_html += buildNavigation(info);
