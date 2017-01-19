@@ -55,7 +55,8 @@ function getS3Data(marker, table_rows) {
   // in one directory.
 
   var s3_rest_url = createS3QueryUrl(marker);
-  // set loading notice
+
+ // set loading notice
   $('#listing').html('<p>loading...</p>');
   
   $.get(s3_rest_url)
@@ -86,12 +87,12 @@ function getS3Data(marker, table_rows) {
         // render bucket link
         $('#bucket_link').html('<a href="' + BUCKET_WEBSITE_URL + '">' + BUCKET_WEBSITE_URL + '</a>');
 
-        // render navigation
+        // render breadcrumbs
         var nav_html = '<ol class="breadcrumb">You\'re here: \n';
         nav_html += buildNavigation(info);
         nav_html += '</ol>\n';
 
-        $('#navigation').html(nav_html);
+        $('#breadcrumbs').html(nav_html);
 
         // render table
         var table_html = '<table class="table table-striped table-condensed"><tbody>\n';
